@@ -77,7 +77,19 @@ for (const mode of modes) {
     for (const type of ["success", "error", "warning", "info", "loading"]) await page.getByTestId(`toast-open-${type}`).click()
     await page.getByTestId("actionbar-toggle").check({ force: true })
     await expect(page.getByTestId("actionbar")).toBeVisible()
-    await page.waitForTimeout(800)
+    // Wait for every finite animation/transition (toast fade-in, action bar slide) to finish rather than a fixed delay:
+    // on a loaded CI runner the toast opacity transition can still be running after 800ms, and the sweep would sample mid-fade colours.
+    // Infinite animations (the loading toast spinner) never finish and are skipped. Loop until a frame passes with nothing pending,
+    // since a transition may only start on the frame after the DOM change.
+    await page.evaluate(async () => {
+      const pending = () => document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity && a.playState !== "finished")
+      const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      await frame()
+      while (pending().length) {
+        await Promise.all(pending().map((a) => a.finished.catch(() => undefined)))
+        await frame()
+      }
+    })
     const { checked, offenders } = await sweep(page)
     expect(checked, "text elements examined").toBeGreaterThan(150)
     const report = offenders.map((o) => `${o.ratio}:1 (<${o.needs}) "${o.text}" ${o.where} fg ${o.fg} on ${o.bg} @${o.size}px`)
