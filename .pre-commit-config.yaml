@@ -1,0 +1,20 @@
+repos:
+  - repo: local
+    hooks:
+      - id: no-merge-conflict-markers
+        name: Reject unresolved git merge conflict markers
+        language: system
+        entry: /bin/sh -eu -c 'if grep -nE "^(<<<<<<<|=======|>>>>>>>)" "$@"; then echo "merge conflict markers found" >&2; exit 1; fi' --
+        pass_filenames: true
+      - id: check-json
+        name: Validate JSON syntax
+        language: system
+        files: '\.json$'
+        entry: node -e 'const fs=require("fs"); for (const f of process.argv.slice(1)) JSON.parse(fs.readFileSync(f,"utf8"));'
+        pass_filenames: true
+      - id: no-test-only
+        name: Reject .only in Playwright spec files
+        language: system
+        files: '^tests/.*\.spec\.ts$'
+        entry: /bin/sh -eu -c 'if grep -nE "\b(test|describe)\.only\s*\(" "$@"; then echo "forbidden .only found in test file" >&2; exit 1; fi' --
+        pass_filenames: true
