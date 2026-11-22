@@ -263,27 +263,18 @@ export function scopeAccentToPalettes(system: PaletteSystem): boolean {
       }
       const target = block as Record<string, unknown>
       for (const key of Object.keys(additions)) {
-        const descriptor = Object.getOwnPropertyDescriptor(target, key)
-        if (descriptor && !("value" in descriptor ? descriptor.writable : descriptor.set)) {
+        let owner: object | null = target
+        let descriptor: PropertyDescriptor | undefined
+        while (owner && !(descriptor = Object.getOwnPropertyDescriptor(owner, key))) {
+          owner = Object.getPrototypeOf(owner)
+        }
+        if (descriptor && (owner !== target || !("value" in descriptor && descriptor.writable))) {
           throw new Error(`colorPalette output for "${name}" cannot accept ${key}`)
         }
       }
       return target
     })
-    const originals = blocks.map((block) =>
-      Object.fromEntries(Object.keys(additions).map((key) => [key, Object.getOwnPropertyDescriptor(block, key)])),
-    )
-    try {
-      for (const block of blocks) Object.assign(block, additions)
-    } catch (error) {
-      for (let i = 0; i < blocks.length; i++) {
-        for (const [key, descriptor] of Object.entries(originals[i])) {
-          if (descriptor) Object.defineProperty(blocks[i], key, descriptor)
-          else delete blocks[i][key]
-        }
-      }
-      throw error
-    }
+    for (const block of blocks) Object.assign(block, additions)
     return true
   } catch (error) {
     if (!warned) {
