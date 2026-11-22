@@ -80,6 +80,10 @@ interface Anchors {
  */
 export function toneScale(a: Anchors) {
   const lerp = (x: number, y: number, t: number) => x + (y - x) * t
+  const hueLerp = (from: number, to: number, t: number) => {
+    const delta = ((to - from + 540) % 360) - 180
+    return ((from + delta * t) % 360 + 360) % 360
+  }
   const l: Record<string, number> = {
     "50": 97.5,
     "100": 94.5,
@@ -108,8 +112,8 @@ export function toneScale(a: Anchors) {
   }
   const hueAt = (s: string) => {
     if (s === "50" || s === "100" || s === "200" || s === "300") return a.h300
-    if (s === "400") return lerp(a.h300, a.h600, 1 / 3)
-    if (s === "500") return lerp(a.h300, a.h600, 2 / 3)
+    if (s === "400") return hueLerp(a.h300, a.h600, 1 / 3)
+    if (s === "500") return hueLerp(a.h300, a.h600, 2 / 3)
     return a.h600
   }
   return Object.fromEntries(STEPS.map((s) => [s, { value: oklch(l[s], c[s], hueAt(s)) }]))
