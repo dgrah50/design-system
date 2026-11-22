@@ -15,8 +15,8 @@
     "testFileGlobs": ["tests/**/*.spec.ts"],
     "testDataGlobs": ["tests/fixtures.ts", "tests/helpers.ts", "tests/global-setup.ts", "tests/in-page/**"],
     "testBuildCmd": "npx tsc --noEmit",
-    "baseTestCmd": "npx playwright test",
-    "testCmd": "npm run build && npx playwright test",
+    "baseTestCmd": "npx playwright test --workers=4 tests/helpers.spec.ts ${ARCHANGEL_NEW_TEST_FILES:-}",
+    "testCmd": "npm run build && npx playwright test --workers=4 tests/helpers.spec.ts ${ARCHANGEL_NEW_TEST_FILES:-}",
     "baseTestRuns": 1,
     "headTestRuns": 1
   }
