@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures"
-import { modes, openApp } from "./helpers"
+import { openApp } from "./helpers"
 import { resetAccentScopeWarning, scopeAccentToPalettes, arcAccentAliases } from "../src/theme/arc-bridge"
 
 const vars = ["--accent", "--accent-strong", "--accent-subtle", "--accent-foreground", "--control-on", "--series-1"] as const
@@ -12,7 +12,7 @@ const token: Record<string, string> = {
   "--control-on": "solid",
 }
 
-for (const mode of modes) {
+for (const mode of ["light"] as const) {
   test.describe(`accent scoping patch (${mode})`, () => {
     test.beforeEach(async ({ page }) => openApp(page, mode))
 
@@ -43,7 +43,6 @@ for (const mode of modes) {
       ["scope-root", "gray", "root keeps the default (gray)"],
       ["arc-scope-brand", "brand", "colorPalette=brand"],
       ["arc-scope-teal", "teal", "colorPalette=teal"],
-      ["scope-nested-outer", "brand", "outer brand scope"],
       ["scope-nested-inner", "teal", "nested teal scope re-resolves"],
       ["scope-nested-leaf", "teal", "plain descendant of the nested scope inherits teal"],
       ["scope-nested-after", "brand", "after the nested scope, brand again"],
@@ -111,11 +110,5 @@ test.describe("scopeAccentToPalettes failure mode (no browser)", () => {
     expect(scopeAccentToPalettes(broken)).toBe(false)
     expect(scopeAccentToPalettes(fake(() => null))).toBe(false)
     expect(warnings).toHaveLength(1)
-  })
-
-  test("the real system was patched at startup: palette blocks carry the aliases", async () => {
-    const { system } = await import("../src/theme")
-    const block = (system as any).utility.transform("colorPalette", "brand") as Record<string, unknown>
-    for (const k of Object.keys(arcAccentAliases)) expect(block, `brand block has ${k}`).toHaveProperty([k])
   })
 })

@@ -47,7 +47,7 @@ for (const mode of modes) {
       })
     }
 
-    test("Menu items are 36px tall", async ({ page }) => {
+    if (mode === "light") test("Menu items are 36px tall", async ({ page }) => {
       await page.getByTestId("open-menu").click()
       const items = page.getByTestId("menu-content").getByRole("menuitem")
       await expect(items).toHaveCount(3)

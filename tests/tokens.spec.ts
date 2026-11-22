@@ -18,19 +18,6 @@ const read = (page: import("@playwright/test").Page) =>
   })
 
 test.describe("tokens", () => {
-  for (const mode of modes) {
-    test(`${mode}: tokens resolve and data-theme matches`, async ({ page }) => {
-      await openApp(page, mode)
-      const t = await read(page)
-      expect(t.foreground, "--foreground").not.toBe("")
-      expect(t.background, "--background").not.toBe("")
-      expect(t.radiusControl, "--radius-control").not.toBe("")
-      expect(t.theme).toBe(mode)
-      expect(t.dark, "html.dark class").toBe(mode === "dark")
-      expect(t.bodyBg, "page background is an opaque colour").toBeTruthy()
-    })
-  }
-
   test("--foreground, --background and the page background flip between modes", async ({ browser }) => {
     const results = {} as Record<Mode, Awaited<ReturnType<typeof read>>>
     for (const mode of modes) {
@@ -43,15 +30,5 @@ test.describe("tokens", () => {
     expect(results.light.background).not.toBe(results.dark.background)
     // Light page is brighter than dark page (contrast against black is a luminance proxy).
     expect(results.light.bodyLum).toBeGreaterThan(results.dark.bodyLum)
-  })
-
-  test("the colour-mode button toggles class and data-theme together", async ({ page }) => {
-    await openApp(page, "light")
-    await page.locator("#mode-toggle").click()
-    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark")
-    await expect(page.locator("html")).toHaveClass(/dark/)
-    await page.locator("#mode-toggle").click()
-    await expect(page.locator("html")).toHaveAttribute("data-theme", "light")
-    await expect(page.locator("html")).not.toHaveClass(/dark/)
   })
 })

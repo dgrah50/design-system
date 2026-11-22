@@ -5,6 +5,8 @@ for (const mode of modes) {
   test.describe(`controls (${mode})`, () => {
     test.beforeEach(async ({ page }) => openApp(page, mode))
 
+    // Control heights do not depend on the colour mode.
+    if (mode === "light")
     for (const [size, px] of Object.entries(controlSizes)) {
       test(`Button and Input ${size} are ${px}px tall`, async ({ page }) => {
         const button = (await page.getByTestId(`btn-size-${size}`).boundingBox())!

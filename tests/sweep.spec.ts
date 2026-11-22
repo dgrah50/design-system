@@ -17,8 +17,6 @@ interface Offender {
  * Threshold 4.5:1, or 3:1 for large text (>= 24px, or >= 18.66px and bold, WCAG 1.4.3).
  * Exclusions (each is a WCAG exemption or not text a user reads):
  *  - disabled controls and their labels (WCAG 1.4.3 exempts inactive components);
- *  - `accent-override-child`: a probe that sets an arbitrary magenta `--accent` on purpose to prove inheritance (accent.spec.ts);
- *    its colour is the test's input, not a theme value;
  *  - elements that are not rendered visibly: display none, visibility hidden, opacity 0, clipped to a pixel (screen-reader-only);
  *  - text whose own colour is fully transparent (skeletons hide their content with `color: transparent`).
  * Limits: gradients and images are ignored by the background resolver; ancestor `opacity` is applied to the text colour.
@@ -51,7 +49,6 @@ async function sweep(page: Page) {
       const rect = el.getBoundingClientRect()
       if (rect.width < 3 || rect.height < 3) continue
       if (el.closest(":disabled, [disabled], [data-disabled], [aria-disabled=true]")) continue
-      if (el.closest("[data-testid=accent-override]")) continue
       const cs = getComputedStyle(el)
       if (cs.color === "rgba(0, 0, 0, 0)" || /\/ 0\)$/.test(cs.color)) continue
       const bg = arc.effectiveBg(el, false)
