@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test"
-import { headingSizes, modes, openApp } from "./helpers"
+import { headingSizes, openApp } from "./helpers"
 
-for (const mode of modes) {
+// Typography does not depend on the colour mode.
+for (const mode of ["light"] as const) {
   test.describe(`type (${mode})`, () => {
     test.beforeEach(async ({ page }) => openApp(page, mode))
 

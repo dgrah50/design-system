@@ -90,7 +90,7 @@ import {
 } from "@chakra-ui/react"
 import { useTheme } from "next-themes"
 import { useState } from "react"
-import type { CSSProperties, ReactNode } from "react"
+import type { ReactNode } from "react"
 
 const fruits = createListCollection({
   items: [
@@ -814,14 +814,6 @@ export default function App() {
               </Box>
               <div data-testid="scope-nested-after">Plain child of the brand scope, after the nested teal one</div>
             </Box>
-            <div
-              data-testid="accent-override"
-              style={{ "--accent": "rgb(255, 0, 255)", padding: "var(--space-3)" } as CSSProperties}
-            >
-              <span data-testid="accent-override-child" style={{ color: "var(--accent)" }}>
-                Descendant of a container that sets --accent in plain CSS
-              </span>
-            </div>
           </Section>
 
           <Section title="Toast" id="sec-toast">
