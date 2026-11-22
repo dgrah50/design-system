@@ -270,7 +270,20 @@ export function scopeAccentToPalettes(system: PaletteSystem): boolean {
       }
       return target
     })
-    for (const block of blocks) Object.assign(block, additions)
+    const originals = blocks.map((block) =>
+      Object.fromEntries(Object.keys(additions).map((key) => [key, Object.getOwnPropertyDescriptor(block, key)])),
+    )
+    try {
+      for (const block of blocks) Object.assign(block, additions)
+    } catch (error) {
+      for (let i = 0; i < blocks.length; i++) {
+        for (const [key, descriptor] of Object.entries(originals[i])) {
+          if (descriptor) Object.defineProperty(blocks[i], key, descriptor)
+          else delete blocks[i][key]
+        }
+      }
+      throw error
+    }
     return true
   } catch (error) {
     if (!warned) {
