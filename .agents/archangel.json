@@ -48,5 +48,21 @@
     "optOut": [
       "fleet-pr-miner"
     ]
+  },
+  "preview": {
+    "kind": "web",
+    "install": [
+      "npm",
+      "ci"
+    ],
+    "start": [
+      "sh",
+      "-c",
+      "node node_modules/vite/bin/vite.js build && exec node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 4173 --strictPort"
+    ],
+    "port": 4173,
+    "readyPath": "/",
+    "shots": [],
+    "allowInstallScripts": false
   }
 }
