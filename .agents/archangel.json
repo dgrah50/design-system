@@ -1,21 +1,44 @@
 {
-  "maxNonTestLines": 150,
-  "maxTotalLines": 300,
-  "maxFiles": 5,
-  "testFileGlobs": ["tests/**/*.spec.ts"],
-  "testDataGlobs": ["tests/fixtures.ts", "tests/helpers.ts", "tests/global-setup.ts", "tests/in-page/**"],
-  "testBuildCmd": "npx tsc --noEmit",
-  "baseTestCmd": "npx playwright test --workers=4 tests/helpers.spec.ts ${ARCHANGEL_NEW_TEST_FILES:-}",
-  "testCmd": "npm run build && npx playwright test --workers=4 tests/helpers.spec.ts ${ARCHANGEL_NEW_TEST_FILES:-}",
-  "baseTestRuns": 1,
-  "headTestRuns": 1,
-  "extraProtectedPaths": [
-    "package.json",
-    "package-lock.json",
-    "tsconfig.json",
-    "vite.config.ts",
-    "playwright.config.ts",
-    "index.html"
+  "version": 1,
+  "gate": {
+    "testFileGlobs": [
+      "tests/**/*.spec.ts"
+    ],
+    "testDataGlobs": [
+      "tests/fixtures.ts",
+      "tests/helpers.ts",
+      "tests/global-setup.ts",
+      "tests/in-page/**"
+    ],
+    "testBuildCmd": "npx tsc --noEmit",
+    "baseTestCmd": "npx playwright test --workers=4 tests/helpers.spec.ts ${ARCHANGEL_NEW_TEST_FILES:-}",
+    "testCmd": "npm run build && npx playwright test --workers=4 tests/helpers.spec.ts ${ARCHANGEL_NEW_TEST_FILES:-}",
+    "protectedPaths": [
+      "package.json",
+      "package-lock.json",
+      "tsconfig.json",
+      "vite.config.ts",
+      "playwright.config.ts",
+      "index.html"
+    ]
+  },
+  "requiredChecks": [
+    "Gate",
+    "Test"
   ],
-  "requiredChecks": ["Gate", "Test"]
+  "scouts": [
+    {
+      "name": "bug-hunt",
+      "schedule": "daily",
+      "maxProposals": 2,
+      "skills": [
+        "general/bug-hunt",
+        "general/input-validation",
+        "typescript/*"
+      ]
+    }
+  ],
+  "landing": {
+    "bugfix": "autonomous"
+  }
 }
