@@ -257,7 +257,9 @@ export function scopeAccentToPalettes(system: PaletteSystem): boolean {
     // Validate every block before touching any, so a failure never leaves the palettes half patched.
     const blocks = names.map((name) => {
       const block = system.utility.transform("colorPalette", name)
-      if (!block || typeof block !== "object") throw new Error(`unexpected colorPalette output for "${name}"`)
+      if (!block || typeof block !== "object" || Array.isArray(block) || !Object.isExtensible(block)) {
+        throw new Error(`unexpected colorPalette output for "${name}"`)
+      }
       return block as Record<string, unknown>
     })
     for (const block of blocks) Object.assign(block, aliases, { [supportsRelativeColor]: arcSeries })
