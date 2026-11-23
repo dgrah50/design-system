@@ -4,7 +4,7 @@ import { css, modes, openApp } from "./helpers"
 /** Press Tab until `target` (the focusable element) is the active element. Real key events, bounded. */
 async function tabTo(page: Page, target: Locator) {
   const handle = await target.elementHandle()
-  for (let i = 0; i < 150; i++) {
+  for (let i = 0; i < 300; i++) {
     await page.keyboard.press("Tab")
     if (await page.evaluate((el) => document.activeElement === el, handle)) return
   }
@@ -21,20 +21,21 @@ for (const mode of modes) {
   test.describe(`focus (${mode})`, () => {
     test.beforeEach(async ({ page }) => openApp(page, mode))
 
-    test("keyboard Tab onto a Button shows an outline of at least 2px", async ({ page }) => {
-      const btn = page.getByTestId("btn-solid-md")
-      await tabTo(page, btn)
-      const o = await outline(btn)
-      expect(o.style, JSON.stringify(o)).not.toBe("none")
-      expect(o.width, JSON.stringify(o)).toBeGreaterThanOrEqual(2)
-    })
-
-    test("keyboard Tab onto a Checkbox shows an outline of at least 2px on the control", async ({ page }) => {
-      await tabTo(page, page.getByTestId("checkbox-unchecked-input"))
-      const o = await outline(page.getByTestId("checkbox-unchecked-control"))
-      expect(o.style, JSON.stringify(o)).not.toBe("none")
-      expect(o.width, JSON.stringify(o)).toBeGreaterThanOrEqual(2)
-    })
+    // [focusable element, element that draws the ring]
+    const targets: Array<[string, string, string]> = [
+      ["Button", "btn-solid-md", "btn-solid-md"],
+      ["Checkbox", "checkbox-unchecked-input", "checkbox-unchecked-control"],
+      ["CheckboxCard", "cc-unchecked-input", "cc-unchecked"],
+      ["RadioCard", "rc-outline-a-input", "rc-outline-a"],
+    ]
+    for (const [name, input, ring] of targets) {
+      test(`keyboard Tab onto a ${name} shows an outline of at least 2px`, async ({ page }) => {
+        await tabTo(page, page.getByTestId(input))
+        const o = await outline(page.getByTestId(ring))
+        expect(o.style, JSON.stringify(o)).not.toBe("none")
+        expect(o.width, JSON.stringify(o)).toBeGreaterThanOrEqual(2)
+      })
+    }
 
     test("a mouse click on a Button leaves no outline", async ({ page }) => {
       const btn = page.getByTestId("btn-solid-md")
