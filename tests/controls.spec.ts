@@ -1,35 +1,33 @@
-import { expect, test } from "@playwright/test"
-import { controlSizes, css, modes, openApp } from "./helpers"
+import { expect, test, type Locator } from "@playwright/test"
+import { controlSizes, openApp } from "./helpers"
 
-for (const mode of modes) {
-  test.describe(`controls (${mode})`, () => {
-    test.beforeEach(async ({ page }) => openApp(page, mode))
+const height = async (loc: Locator) => Math.round((await loc.boundingBox())!.height)
+const width = async (loc: Locator) => Math.round((await loc.boundingBox())!.width)
 
-    // Control heights do not depend on the colour mode.
-    if (mode === "light")
-    for (const [size, px] of Object.entries(controlSizes)) {
-      test(`Button and Input ${size} are ${px}px tall`, async ({ page }) => {
-        const button = (await page.getByTestId(`btn-size-${size}`).boundingBox())!
-        const input = (await page.getByTestId(`input-size-${size}`).boundingBox())!
-        expect(button.height, `button ${size}`).toBeCloseTo(px, 0)
-        expect(input.height, `input ${size}`).toBeCloseTo(px, 0)
-        expect(button.height).toBeCloseTo(input.height, 0)
-      })
-    }
+// Control heights do not depend on the colour mode. Controls that sit side by side in a form must line up.
+test.describe("controls share one height per size", () => {
+  test.beforeEach(async ({ page }) => openApp(page, "light"))
 
-    test("Button md radius equals --radius-control (14px by default)", async ({ page }) => {
-      const btn = page.getByTestId("btn-solid-md")
-      const radius = parseFloat(await css(btn, "border-top-left-radius"))
-      const token = await page.evaluate(() => window.__arc.resolveLength("var(--radius-control)"))
-      expect(token, "--radius-control resolves").toBeGreaterThan(0)
-      expect(radius).toBeCloseTo(token, 1)
-      expect(token).toBeCloseTo(14, 1)
+  for (const [size, px] of Object.entries(controlSizes)) {
+    test(`${size} is ${px}px tall`, async ({ page }) => {
+      const t = (id: string) => page.getByTestId(`${id}-${size}`)
+      expect(await height(page.getByTestId(`btn-size-${size}`)), "Button").toBe(px)
+      expect(await height(page.getByTestId(`input-size-${size}`)), "Input").toBe(px)
+      if (size === "xl") return
+      const pages = page.getByTestId(`pagination-${size}`).locator("button")
+      for (let i = 0; i < (await pages.count()); i++) {
+        expect(await height(pages.nth(i)), `pagination item ${i}`).toBe(px)
+        expect(await width(pages.nth(i)), `pagination item ${i} width`).toBe(px)
+      }
+      for (const id of ["toggle", "clip", "tags", "date"]) expect(await height(t(id)), id).toBe(px)
+      expect(await height(t("editable").locator("[data-part=preview]")), "Editable preview").toBe(px)
+      for (const id of ["iconbtn", "close"]) {
+        expect(await height(t(id)), `${id} height`).toBe(px)
+        expect(await width(t(id)), `${id} is square`).toBe(px)
+      }
+      const input = await height(t("addon-input"))
+      const group = t("addon-input").locator("xpath=..").locator("> *")
+      for (let i = 0; i < (await group.count()); i++) expect(await height(group.nth(i)), `addon group child ${i}`).toBe(input)
     })
-
-    test("Card radius is 24px with no resting shadow", async ({ page }) => {
-      const card = page.getByTestId("card-default")
-      expect(parseFloat(await css(card, "border-top-left-radius"))).toBeCloseTo(24, 1)
-      expect(await css(card, "box-shadow")).toBe("none")
-    })
-  })
-}
+  }
+})

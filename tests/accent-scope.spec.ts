@@ -39,23 +39,23 @@ for (const mode of ["light"] as const) {
         { testid, palette, vars: [...vars], token },
       )
 
-    const cases: Array<[string, string, string]> = [
-      ["scope-root", "gray", "root keeps the default (gray)"],
-      ["arc-scope-brand", "brand", "colorPalette=brand"],
-      ["arc-scope-teal", "teal", "colorPalette=teal"],
-      ["scope-nested-inner", "teal", "nested teal scope re-resolves"],
-      ["scope-nested-leaf", "teal", "plain descendant of the nested scope inherits teal"],
-      ["scope-nested-after", "brand", "after the nested scope, brand again"],
+    const cases: Array<[string, string]> = [
+      ["scope-root", "gray"],
+      ["arc-scope-brand", "brand"],
+      ["arc-scope-teal", "teal"],
+      ["scope-nested-inner", "teal"],
+      ["scope-nested-leaf", "teal"],
+      ["scope-nested-after", "brand"],
     ]
-    for (const [testid, palette, label] of cases) {
-      test(`${label}: --accent, --accent-strong, --accent-subtle, --accent-foreground and --control-on follow ${palette}`, async ({ page }) => {
+    test("accent aliases follow the nearest colorPalette scope, including nested scopes", async ({ page }) => {
+      for (const [testid, palette] of cases) {
         const r = await resolve(page, testid, palette)
         for (const [v, { actual, expected }] of Object.entries(r)) {
           if (expected) expect(actual, `${v} in ${testid}`).toBe(expected)
           else expect(actual, `${v} in ${testid} is defined`).not.toBe("")
         }
-      })
-    }
+      }
+    })
 
     test("--series-1 differs between the brand, teal and root scopes", async ({ page }) => {
       const seen = new Map<string, string>()
@@ -93,6 +93,14 @@ test.describe("scopeAccentToPalettes failure mode (no browser)", () => {
     for (const n of ["gray", "brand"]) for (const k of Object.keys(arcAccentAliases)) expect(blocks[n], `${n} has ${k}`).toHaveProperty([k])
     expect(Object.keys(blocks.brand).some((k) => k.startsWith("@supports")), "series block added").toBe(true)
     expect(warnings).toEqual([])
+  })
+
+  test("a frozen later palette block falls back without patching earlier blocks", () => {
+    const gray = {}
+    const brand = Object.freeze({})
+    expect(scopeAccentToPalettes(fake((_p, n) => (n === "gray" ? gray : brand)))).toBe(false)
+    expect(gray).toEqual({})
+    expect(warnings).toHaveLength(1)
   })
 
   test("a Chakra that returns no style object falls back: no throw, one warning, nothing patched", () => {
