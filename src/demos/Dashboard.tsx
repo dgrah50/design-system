@@ -3,10 +3,10 @@ import { glyph, icons } from "./shared"
 
 const nav = [["Overview", "home"], ["Analytics", "chart"], ["Customers", "users"], ["Billing", "card"], ["Settings", "cog"]] as const
 const stats = [
-  ["Monthly revenue", "$48,290", "12.4%", "up"],
-  ["Active users", "12,408", "4.1%", "up"],
-  ["Churn rate", "2.3%", "0.6%", "down"],
-  ["Avg. session", "6m 42s", "1.2%", "up"],
+  ["Monthly revenue", "$48,290", "12.4%", "up", true],
+  ["Active users", "12,408", "4.1%", "up", true],
+  ["Churn rate", "2.3%", "0.6%", "down", true],
+  ["Avg. session", "6m 42s", "1.2%", "up", true],
 ] as const
 const rows = [
   ["Olivia Martin", "olivia@acme.co", "Pro", "Active", "$299.00"],
@@ -44,11 +44,11 @@ export default function Dashboard() {
           </HStack>
         </Flex>
         <Grid templateColumns={{ base: "1fr", sm: "1fr 1fr", xl: "repeat(4, 1fr)" }} gap="4">
-          {stats.map(([l, v, d, dir]) => (
+          {stats.map(([l, v, d, dir, good]) => (
             <Card.Root key={l}><Card.Body>
               <Stat.Root>
                 <Stat.Label>{l}</Stat.Label><Stat.ValueText>{v}</Stat.ValueText>
-                <Badge colorPalette={dir === "up" ? "green" : "red"} variant="subtle" w="fit-content">{dir === "up" ? "↑" : "↓"} {d}</Badge>
+                <Badge colorPalette={good ? "green" : "red"} variant="subtle" w="fit-content">{dir === "up" ? "↑" : "↓"} {d}</Badge>
               </Stat.Root>
             </Card.Body></Card.Root>
           ))}
