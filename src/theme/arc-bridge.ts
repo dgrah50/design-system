@@ -268,7 +268,10 @@ export function scopeAccentToPalettes(system: PaletteSystem): boolean {
         while (owner && !(descriptor = Object.getOwnPropertyDescriptor(owner, key))) {
           owner = Object.getPrototypeOf(owner)
         }
-        if (descriptor && (owner !== target || !("value" in descriptor && descriptor.writable))) {
+        if (
+          descriptor &&
+          !("value" in descriptor ? descriptor.writable : typeof descriptor.set === "function")
+        ) {
           throw new Error(`colorPalette output for "${name}" cannot accept ${key}`)
         }
       }

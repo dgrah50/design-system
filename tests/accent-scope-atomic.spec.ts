@@ -47,7 +47,7 @@ test("rejects an inherited read-only alias without patching any palette", () => 
   expect(Object.keys(brand)).toEqual([])
 })
 
-test("rejects a setter without calling it or patching any palette", () => {
+test("accepts an own setter and an inherited writable alias", () => {
   const gray: Record<string, unknown> = {}
   const brand: Record<string, unknown> = {}
   let calls = 0
@@ -56,11 +56,31 @@ test("rejects a setter without calling it or patching any palette", () => {
     configurable: true,
   })
 
-  expectRejectedWithoutChanges(gray, brand)
-  expect(calls).toBe(0)
-  expect(gray).toEqual({})
+  const proto = { "--accent": "fallback" }
+  const inherited = Object.create(proto) as Record<string, unknown>
+  const system = {
+    utility: { transform: (_prop: string, name: string) => (name === "gray" ? inherited : brand) },
+    tokens: { colorPaletteMap: new Map([["gray", {}], ["brand", {}]]), getVar: (path: string) => path },
+  }
+
+  resetAccentScopeWarning()
+  expect(scopeAccentToPalettes(system)).toBe(true)
+  expect(calls).toBe(1)
+  expect(inherited["--accent"]).toBe("--accent")
+  expect(Object.getOwnPropertyDescriptor(inherited, "--accent")?.writable).toBe(true)
+  expect(proto["--accent"]).toBe("fallback")
   expect(Object.getOwnPropertyDescriptor(brand, "--accent")?.set).toBeDefined()
-  expect(Object.keys(brand)).toEqual([])
+})
+
+test("rejects a later getter-only alias without patching earlier palettes", () => {
+  const gray: Record<string, unknown> = {}
+  const brand: Record<string, unknown> = {}
+  Object.defineProperty(brand, "--accent", { get: () => "x", enumerable: true })
+
+  expectRejectedWithoutChanges(gray, brand)
+  expect(gray).toEqual({})
+  expect(Object.getOwnPropertyDescriptor(brand, "--accent")?.get).toBeDefined()
+  expect(Object.keys(brand)).toEqual(["--accent"])
 })
 
 test("preserves an earlier writable alias when a later palette is invalid", () => {
