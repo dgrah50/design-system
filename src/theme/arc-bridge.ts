@@ -254,15 +254,30 @@ export function scopeAccentToPalettes(system: PaletteSystem): boolean {
     const aliases = Object.fromEntries(Object.entries(arcAccentAliases).map(([k, v]) => [k, resolve(v)]))
     const names = Array.from(system.tokens.colorPaletteMap.keys())
     if (!names.length) throw new Error("no colour palettes found")
+    const additions = { ...aliases, [supportsRelativeColor]: arcSeries }
     // Validate every block before touching any, so a failure never leaves the palettes half patched.
     const blocks = names.map((name) => {
       const block = system.utility.transform("colorPalette", name)
       if (!block || typeof block !== "object" || Array.isArray(block) || !Object.isExtensible(block)) {
         throw new Error(`unexpected colorPalette output for "${name}"`)
       }
-      return block as Record<string, unknown>
+      const target = block as Record<string, unknown>
+      for (const key of Object.keys(additions)) {
+        let owner: object | null = target
+        let descriptor: PropertyDescriptor | undefined
+        while (owner && !(descriptor = Object.getOwnPropertyDescriptor(owner, key))) {
+          owner = Object.getPrototypeOf(owner)
+        }
+        if (
+          descriptor &&
+          !("value" in descriptor ? descriptor.writable : typeof descriptor.set === "function")
+        ) {
+          throw new Error(`colorPalette output for "${name}" cannot accept ${key}`)
+        }
+      }
+      return target
     })
-    for (const block of blocks) Object.assign(block, aliases, { [supportsRelativeColor]: arcSeries })
+    for (const block of blocks) Object.assign(block, additions)
     return true
   } catch (error) {
     if (!warned) {
